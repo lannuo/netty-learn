@@ -10,6 +10,9 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
+import io.netty.handler.logging.LogLevel;
+import io.netty.handler.logging.LoggingHandler;
+import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.CharsetUtil;
 
 public class GroupChatServer {
@@ -28,6 +31,7 @@ public class GroupChatServer {
                     .channel(NioServerSocketChannel.class)
                     .option(ChannelOption.SO_BACKLOG,128)
                     .childOption(ChannelOption.SO_KEEPALIVE, true)
+                    .handler(new LoggingHandler(LogLevel.INFO))
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         protected void initChannel(SocketChannel ch) throws Exception {
@@ -35,6 +39,8 @@ public class GroupChatServer {
                             p.addLast("encoder", new StringEncoder(CharsetUtil.UTF_8));
                             p.addLast("decoder", new StringDecoder(CharsetUtil.UTF_8));
                             p.addLast("groupChatServerHandler", new GroupChatServerHandler());
+                            p.addLast("IdleStateHandler",new IdleStateHandler(3,5,12));
+                            p.addLast("heartHandler",new HeartHandler());
                         }
                     });
             ChannelFuture channelFuture = bootstrap.bind(port).sync();
